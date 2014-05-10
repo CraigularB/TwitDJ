@@ -33,7 +33,7 @@ namespace TwitDJ
             while (true)
             {
                 List<TwitterStatus> tweets = tw != null ? new List<TwitterStatus>(serv.ListTweetsMentioningMe(new ListTweetsMentioningMeOptions { SinceId = tw.Id })) : new List<TwitterStatus>(serv.ListTweetsMentioningMe(new ListTweetsMentioningMeOptions()));
-                tweets = tweets.Where(s => s.Text.Substring(12).Replace("&amp;", "&").StartsWith("DJ:")).ToList();
+                tweets = tweets.Where(s => s.Text.Substring(s.Text.IndexOf(" ", StringComparison.Ordinal) + 1).Replace("&amp;", "&").StartsWith("DJ:")).ToList();
                 if (tweets.Count > 0)
                 {
                     tweets.Reverse();
@@ -42,11 +42,10 @@ namespace TwitDJ
                         tw = tweet;
                         IITTrack t = null;
                         var tweetText = tweet.Text;
-                        tweetText = tweetText.Substring(12);
-                        tweetText = tweetText.Replace("&amp;", "&");
+                        tweetText = tweetText.Substring(tweetText.IndexOf(" ", StringComparison.Ordinal) + 1).Replace("&amp;", "&");
                         if (tweetText.Contains("|"))
                         {
-                            tweetText = tweetText.Substring(3);
+                            tweetText = tweetText.Substring(tweetText.IndexOf("DJ:", StringComparison.Ordinal) + "DJ:".Length);
                             var songParts = tweetText.Split('|');
                             foreach (var part in songParts)
                             {
