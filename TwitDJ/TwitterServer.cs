@@ -19,6 +19,7 @@ namespace TwitDJ
             serv.AuthenticateWith(AuthVars.TokenPublic, AuthVars.TokenSecret);
             string song = null;
             string artist = null;
+            string album = null;
             var iT = new iTunesApp();
             var currPl = (iT.LibrarySource.Playlists.ItemByName["C# Interface"] ??
                          iT.CreatePlaylist("C# Interface")) as IITUserPlaylist;
@@ -38,7 +39,6 @@ namespace TwitDJ
                     tweets.Reverse();
                     foreach (var tweet in tweets)
                     {
-                        string album = null;
                         tw = tweet;
                         IITTrack t = null;
                         var tweetText = tweet.Text;
@@ -53,31 +53,14 @@ namespace TwitDJ
                                 Console.Write(part);
                                 Console.Write("||");
                             }
-                            song = songParts[0].Trim().ToUpper();
-                            artist = songParts[1].Trim().ToUpper();
-                            if (songParts.Length == 3)
-                                album = songParts[2].Trim();
-                            var s = iT.LibraryPlaylist.Search(song, ITPlaylistSearchField.ITPlaylistSearchFieldSongNames);
-                            for (var i = 1; i <= s.Count; i++)
-                            {
-                                var t2 = s[i];
-                                if (t2.Name.ToUpper() == song && t2.Artist.ToUpper() == artist)
-                                {
-                                    if (album != null)
-                                    {
-                                        if (t2.Album == album)
-                                        {
-                                            t = t2;
-                                            break;
-                                        }
-                                    }
-                                    else
-                                    {
-                                        t = s[i];
-                                        break;
-                                    }
-                                }
-                            }
+                            Console.WriteLine();
+                            song = songParts[1].Trim().ToUpper();
+                            artist = songParts[0].Trim().ToUpper();
+                            album = songParts.Length == 3 ? songParts[2].Trim().ToUpper() : "";
+                            string searchText = song + " " + artist + " " + album;
+                            var s = iT.LibraryPlaylist.Search(searchText, ITPlaylistSearchField.ITPlaylistSearchFieldVisible);
+                            t = s.Cast<IITTrack>().First(t2 => t2.Name.ToUpper() == song && t2.Artist.ToUpper() == artist && (t2.Album.ToUpper() == album || album == ""));
+                            Console.WriteLine(t.Artist + "||" + t.Album + "||" + t.Name);
                         }
                         else if (tweetText.ToUpper().Contains("SHUFFLE") || tweetText.ToUpper().Contains("RANDOM"))
                         {
@@ -92,7 +75,7 @@ namespace TwitDJ
                         var tInPl = currPl.Tracks;
                         if (t != null && (tInPl.ItemByName[song] == null || tInPl.ItemByName[artist] == null))
                         {
-                            if (album != null)
+                            if (album != "")
                             {
                                 if (tInPl.ItemByName[album] == null)
                                     currPl.AddTrack(t);
